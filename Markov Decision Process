@@ -1,0 +1,114 @@
+import gym
+import numpy as np
+from IPython import display
+from matplotlib import pyplot as plt
+
+from envs import Maze
+%matplotlib inline
+
+env = Maze()
+
+initial_state = env.reset()
+print(f"The new episode will start in state: {initial_state}")
+
+frame = env.render(mode='rgb_array')
+plt.axis('off')
+plt.title(f"State: {initial_state}")
+plt.imshow(frame)
+
+action = 2
+next_state, reward, done, info = env.step(action)
+print(f"After moving down 1 row, the agent is in state: {next_state}")
+print(f"After moving down 1 row, we got a reward of: {reward}")
+print("After moving down 1 row, the task is", "" if done else "not", "finished")
+
+frame = env.render(mode='rgb_array')
+plt.axis('off')
+plt.title(f"State: {next_state}")
+plt.imshow(frame)
+
+print(f"For example, the initial state is: {env.reset()}")
+print(f"The space state is of type: {env.observation_space}")
+
+print(f"An example of a valid action is: {env.action_space.sample()}")
+print(f"The action state is of type: {env.action_space}")
+
+env = Maze()
+state = env.reset()
+trajectory = []
+for _ in range(3):
+    action = env.action_space.sample()
+    next_state, reward, done, extra_info = env.step(action)
+    trajectory.append([state, action, reward, done, next_state])
+    state = next_state
+env.close()
+
+print(f"Congrats! You just generated your first trajectory:\n{trajectory}")
+
+env = Maze()
+state = env.reset()
+episode = []
+done = False
+while not done:
+    action = env.action_space.sample()
+    next_state, reward, done, extra_info = env.step(action)
+    episode.append([state, action, reward, done, next_state])
+    state = next_state
+env.close()
+
+print(f"Congrats! You just generated your first episode:\n{episode}")
+
+env = Maze()
+state = env.reset()
+action = env.action_space.sample()
+_, reward, _, _ = env.step(action)
+print(f"We achieved a reward of {reward} by taking action {action} in state {state}")
+
+env = Maze()
+state = env.reset()
+done = False
+gamma = 0.99
+G_0 = 0
+t = 0
+while not done:
+    action = env.action_space.sample()
+    _, reward, done, _ = env.step(action)
+    G_0 += gamma ** t * reward
+    t += 1
+env.close()
+
+print(
+    f"""It took us {t} moves to find the exit, 
+    and each reward r(s,a)=-1, so the return amounts to {G_0}""")
+
+def random_policy(state):
+    return np.array([0.25] * 4)
+
+env = Maze()
+state = env.reset()
+
+action_probabilities = random_policy(state)
+
+objects = ('Up', 'Right', 'Down', 'Left')
+y_pos = np.arange(len(objects))
+
+plt.bar(y_pos, action_probabilities, alpha=0.5)
+plt.xticks(y_pos, objects)
+plt.ylabel('P(a|s)')
+plt.title('Random Policy')
+plt.tight_layout()
+
+plt.show()
+
+env.reset()
+done = False
+img = plt.imshow(env.render(mode='rgb_array')) 
+while not done:
+    action = np.random.choice(range(4), 1, p=action_probabilities)
+    _, _, done, _ = env.step(action)
+    img.set_data(env.render(mode='rgb_array')) 
+    plt.axis('off')
+    display.display(plt.gcf())
+    display.clear_output(wait=True)
+env.close()
+
